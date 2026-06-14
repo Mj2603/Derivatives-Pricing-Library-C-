@@ -18,7 +18,7 @@ ctest --output-on-failure
 ## Example
 
 ```bash
-./price_european 100 100 0.05 0.20 1.0 1    # spot strike r sigma T is_call
+./price_european 100 100 0.05 0.20 1.0 1    
 ./bench_pricing
 ```
 
