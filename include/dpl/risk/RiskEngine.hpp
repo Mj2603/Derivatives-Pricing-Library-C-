@@ -33,4 +33,4 @@ private:
     AnalyticalEngine engine_;
 };
 
-}  // namespace dpl
+}
