@@ -30,7 +30,7 @@ Greeks black_scholes_greeks(OptionType type, const BSFactors& f, const BSParams&
     Greeks g;
     const double pdf_d1 = norm_pdf(f.d1);
 
-    // Theta: per calendar day. Vega/rho: per 1% move in sigma/r.
+    // theta/day; vega and rho per 1% bump
     if (type == OptionType::Call) {
         g.delta = norm_cdf(f.d1);
         g.theta = (-params.spot * pdf_d1 * params.volatility / (2.0 * f.sqrt_t)

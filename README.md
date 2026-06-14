@@ -1,11 +1,10 @@
-# Derivatives Pricing Library (C++)
+# Derivatives Pricing Library
 
-Object-oriented derivatives pricing framework. Supports analytical, binomial tree, Monte Carlo, and finite-difference methods for European and American vanillas, barrier options (FD), and arithmetic Asian options (MC). Includes Greeks, 1D strike vol surface interpolation, SABR calibration, and portfolio risk aggregation.
+C++17 library for pricing European and American vanillas, knock-out barriers, and arithmetic Asian options. Black-Scholes Greeks, 1D vol spline, implied vol root-finding, SABR fit, portfolio greek aggregation.
 
 ## Requirements
 
-- CMake 3.16+
-- C++17 compiler (GCC 9+, Clang 10+, MSVC 2019+)
+CMake 3.16+, C++17.
 
 ## Build
 
@@ -13,56 +12,39 @@ Object-oriented derivatives pricing framework. Supports analytical, binomial tre
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build .
-```
-
-## Test
-
-```bash
-cd build
 ctest --output-on-failure
 ```
 
-## Run
+## Example
 
 ```bash
-./price_european 100 100 0.05 0.20 1.0 1
+./price_european 100 100 0.05 0.20 1.0 1    # spot strike r sigma T is_call
 ./bench_pricing
 ```
 
-Arguments for `price_european`: spot strike rate vol maturity is_call(0/1).
+## Layout
 
-## Directory Layout
+- `include/dpl`, `src` — library
+- `tests` — gtest
+- `benchmarks`, `examples`, `scripts`
 
-```
-include/dpl/     Public headers
-src/             Implementation
-tests/           Unit tests
-benchmarks/      Method comparison
-examples/        CLI pricing tool
-docs/            Architecture notes
-scripts/         Python BS reference
-```
+## Benchmarks
 
-## Results
+ATM call, S=K=100, r=5%, sigma=20%, T=1yr. Reference: 10.4506.
 
-ATM European call: S=100, K=100, r=5%, σ=20%, T=1yr.
+| Method | Error | Time |
+|--------|-------|------|
+| Binomial 500 steps | 0.004 | 208 us |
+| MC 100k paths | 0.013 | 398 ms |
+| Crank-Nicolson 200x200 | 0.005 | 769 us |
 
-| Method | Price | Error | Runtime |
-|--------|-------|-------|---------|
-| Analytical | 10.4506 | — | 2 μs |
-| Binomial (500) | 10.4466 | 0.0040 | 208 μs |
-| Monte Carlo (100k) | 10.4381 | 0.0125 | 398 ms |
-| Crank-Nicolson (200×200) | 10.4554 | 0.0048 | 769 μs |
+5000-option portfolio greeks: under 1 ms.
 
-Portfolio risk (5000 options): < 1 ms.
+## Scope
 
-## Limitations
+Implemented: European/American (tree), barrier knock-out (FD), Asian arithmetic (MC), flat or curve discounting, strike vol from spline.
 
-- `VolSurface`: 1D cubic spline over strike; passed into `MarketData` for strike-dependent vol
-- `YieldCurve`: flat or term-structure discounting via `MarketData`
-- Barrier options: Down-and-out and up-and-out only, priced by finite difference
-- Asian options: arithmetic average, Monte Carlo only
-- SABR calibration: grid search, single-strike fit
+Not done: 2D vol surface, knock-in barriers, American MC/FD, proper SABR optimizer.
 
 ## License
 

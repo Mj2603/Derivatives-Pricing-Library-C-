@@ -26,7 +26,7 @@ double implied_volatility(OptionType type, double market_price, const MarketData
             return sigma;
         }
 
-        // Vega is per 1% vol move; scale to per-unit vol
+        // vega quoted per 1% vol
         const double vega = greeks.vega * 100.0;
         if (std::abs(vega) < 1e-12) {
             break;

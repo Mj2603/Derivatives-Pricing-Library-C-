@@ -6,7 +6,7 @@
 #include "dpl/instruments/BarrierOption.hpp"
 #include "dpl/instruments/EuropeanOption.hpp"
 
-TEST(FiniteDifference, EuropeanCall_CrankNicolson_near_analytical) {
+TEST(FiniteDifference, CallCN) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -19,7 +19,7 @@ TEST(FiniteDifference, EuropeanCall_CrankNicolson_near_analytical) {
     EXPECT_NEAR(fd_price, analytical_price, 0.10);
 }
 
-TEST(FiniteDifference, EuropeanPut_Implicit_near_analytical) {
+TEST(FiniteDifference, PutImplicit) {
     const dpl::EuropeanOption option(dpl::OptionType::Put, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -32,7 +32,7 @@ TEST(FiniteDifference, EuropeanPut_Implicit_near_analytical) {
     EXPECT_NEAR(fd_price, analytical_price, 0.10);
 }
 
-TEST(FiniteDifference, DownAndOut_barrier_below_analytical) {
+TEST(FiniteDifference, DownAndOut) {
     const dpl::EuropeanOption vanilla(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::BarrierOption barrier(dpl::OptionType::Call, 100.0, 1.0, 80.0,
                                      dpl::BarrierType::DownAndOut);

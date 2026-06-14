@@ -82,7 +82,7 @@ PricingResult FiniteDifferenceEngine::price(const Option& option,
     const int N = time_steps_;
     const double dt = T / N;
 
-    // Log-space grid: uniform in x = ln(S), concentrates mesh near the strike
+    // log-space grid for mesh near strike
     const double s_min = std::max(K * 0.25, S * 0.1);
     const double s_max = std::max(S * 3.0, K * 3.0);
     const double x_min = std::log(s_min);

@@ -10,7 +10,7 @@
 #include <cmath>
 #include <vector>
 
-TEST(VolSurface, CubicSpline_interpolates_known_points) {
+TEST(VolSurface, Spline) {
     const std::vector<double> strikes = {80.0, 90.0, 100.0, 110.0, 120.0};
     const std::vector<double> vols = {0.28, 0.24, 0.20, 0.22, 0.26};
 
@@ -22,7 +22,7 @@ TEST(VolSurface, CubicSpline_interpolates_known_points) {
     EXPECT_LT(surface.volatility(95.0), 0.24);
 }
 
-TEST(VolSurface, Strike_dependent_vol_affects_analytical_price) {
+TEST(VolSurface, SmileAffectsOTM) {
     const std::vector<double> strikes = {90.0, 100.0, 110.0};
     const std::vector<double> vols = {0.24, 0.20, 0.22};
     const dpl::VolSurface surface(strikes, vols);
@@ -44,7 +44,7 @@ TEST(VolSurface, Strike_dependent_vol_affects_analytical_price) {
     EXPECT_NE(otm_flat, otm_smile);
 }
 
-TEST(ImpliedVol, Recovers_input_volatility) {
+TEST(ImpliedVol, RoundTrip) {
     const double true_vol = 0.25;
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, true_vol);
@@ -58,7 +58,7 @@ TEST(ImpliedVol, Recovers_input_volatility) {
     EXPECT_NEAR(recovered, true_vol, 1e-4);
 }
 
-TEST(SABR, Calibration_reduces_model_error) {
+TEST(SABR, GridFit) {
     dpl::SABRMarketQuote quote{100.0, 100.0, 1.0, 0.22};
 
     const dpl::SABRParams initial{0.1, 0.5, 0.0, 0.3};

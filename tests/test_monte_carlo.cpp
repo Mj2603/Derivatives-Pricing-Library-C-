@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-TEST(MonteCarlo, EuropeanCall_converges_to_analytical) {
+TEST(MonteCarlo, CallVsBS) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -21,7 +21,7 @@ TEST(MonteCarlo, EuropeanCall_converges_to_analytical) {
     EXPECT_NEAR(mc_price, analytical_price, 0.15);
 }
 
-TEST(MonteCarlo, Antithetic_reduces_error_vs_plain) {
+TEST(MonteCarlo, Antithetic) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -39,7 +39,7 @@ TEST(MonteCarlo, Antithetic_reduces_error_vs_plain) {
     EXPECT_LT(anti_error, plain_error);
 }
 
-TEST(MonteCarlo, ControlVariate_reduces_error_vs_plain) {
+TEST(MonteCarlo, ControlVariate) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.25);
 
@@ -57,7 +57,7 @@ TEST(MonteCarlo, ControlVariate_reduces_error_vs_plain) {
     EXPECT_LT(control_error, plain_error);
 }
 
-TEST(MonteCarlo, ArithmeticAsian_call_positive_price) {
+TEST(MonteCarlo, AsianCall) {
     const dpl::AsianOption option(dpl::OptionType::Call, 100.0, 1.0, 12);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 

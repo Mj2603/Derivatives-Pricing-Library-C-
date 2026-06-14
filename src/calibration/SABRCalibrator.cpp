@@ -61,7 +61,7 @@ SABRParams calibrate_sabr(const SABRMarketQuote& quote, double initial_alpha,
                           double beta) {
     SABRParams params{initial_alpha, beta, -0.3, 0.4};
 
-    // Grid search over rho and nu; alpha updated by vol error at each step
+    // grid over rho, nu; tweak alpha by vol error
     double best_error = 1e10;
     SABRParams best = params;
 

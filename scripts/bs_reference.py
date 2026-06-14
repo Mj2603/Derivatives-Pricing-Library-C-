@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Black-Scholes reference implementation for benchmark comparison."""
 
 import math
 import sys

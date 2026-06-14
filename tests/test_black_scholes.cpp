@@ -13,7 +13,7 @@ constexpr double kTolerance = 1e-4;
 
 }  // namespace
 
-TEST(BlackScholes, EuropeanCall_ATM_matches_closed_form) {
+TEST(BlackScholes, CallPrice) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -28,7 +28,7 @@ TEST(BlackScholes, EuropeanCall_ATM_matches_closed_form) {
     EXPECT_NEAR(result.greeks.delta, 0.6368, 0.01);
 }
 
-TEST(BlackScholes, EuropeanPut_Price_and_Greeks) {
+TEST(BlackScholes, PutGreeks) {
     const dpl::EuropeanOption option(dpl::OptionType::Put, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 

@@ -7,7 +7,7 @@
 #include <cmath>
 #include <random>
 
-TEST(RiskEngine, Aggregates_portfolio_greeks) {
+TEST(RiskEngine, TwoLegBook) {
     dpl::RiskEngine engine;
 
     engine.add_position(dpl::EuropeanOption(dpl::OptionType::Call, 100.0, 0.5),
@@ -22,7 +22,7 @@ TEST(RiskEngine, Aggregates_portfolio_greeks) {
     EXPECT_NE(risk.vega, 0.0);
 }
 
-TEST(RiskEngine, Scales_to_thousands_of_positions) {
+TEST(RiskEngine, LargeBook) {
     dpl::RiskEngine engine;
     std::mt19937 rng(42);
     std::uniform_real_distribution<double> strike_dist(80.0, 120.0);

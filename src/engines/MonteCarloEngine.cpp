@@ -183,7 +183,7 @@ PricingResult MonteCarloEngine::price(const Option& option,
     PricingResult result;
 
     if (variance_reduction_ == MCVarianceReduction::ControlVariate) {
-        // Control: discounted terminal spot, E[e^{-rT} S_T] = S_0
+        // control: E[e^{-rT} S_T] = S_0
         result.price = apply_control_variate(samples, S0);
     } else if (variance_reduction_ == MCVarianceReduction::Antithetic) {
         result.price = sum_discounted / paths;

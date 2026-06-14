@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-TEST(Binomial, EuropeanCall_converges_to_analytical) {
+TEST(Binomial, CallVsBS) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 1.0);
     const dpl::MarketData market(100.0, 0.05, 0.20);
 
@@ -21,7 +21,7 @@ TEST(Binomial, EuropeanCall_converges_to_analytical) {
     EXPECT_NEAR(tree_price, analytical_price, 0.05);
 }
 
-TEST(Binomial, AmericanPut_exceeds_EuropeanPut) {
+TEST(Binomial, AmericanPutEarlyEx) {
     const dpl::MarketData market(100.0, 0.05, 0.25);
 
     const dpl::EuropeanOption european(dpl::OptionType::Put, 100.0, 1.0);
@@ -36,7 +36,7 @@ TEST(Binomial, AmericanPut_exceeds_EuropeanPut) {
     EXPECT_GE(american_price, european_price);
 }
 
-TEST(Binomial, CRR_steps_increase_improves_accuracy) {
+TEST(Binomial, MoreSteps) {
     const dpl::EuropeanOption option(dpl::OptionType::Call, 100.0, 0.5);
     const dpl::MarketData market(100.0, 0.05, 0.30);
 
