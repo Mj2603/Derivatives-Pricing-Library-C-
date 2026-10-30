@@ -1,4 +1,8 @@
 #include "dpl/instruments/BarrierOption.hpp"
+#include "dpl/core/Validation.hpp"
+
+#include <cmath>
+#include <stdexcept>
 
 namespace dpl {
 
@@ -8,7 +12,16 @@ BarrierOption::BarrierOption(OptionType type, double strike, double maturity,
       strike_(strike),
       maturity_(maturity),
       barrier_(barrier),
-      barrier_type_(barrier_type) {}
+      barrier_type_(barrier_type) {
+    validate_option_parameters(type, strike, maturity);
+    if (!std::isfinite(barrier) || barrier <= 0.0) {
+        throw std::invalid_argument("barrier must be finite and positive");
+    }
+    if (barrier_type != BarrierType::UpAndOut &&
+        barrier_type != BarrierType::DownAndOut) {
+        throw std::invalid_argument("unsupported barrier type");
+    }
+}
 
 OptionType BarrierOption::type() const { return type_; }
 ExerciseStyle BarrierOption::exercise() const { return ExerciseStyle::European; }
