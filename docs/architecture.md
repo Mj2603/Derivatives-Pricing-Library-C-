@@ -35,7 +35,7 @@ The methods are not interchangeable across every product. In particular, America
 - Analytical Black–Scholes Greeks are provided for European options.
 - Theta is expressed per calendar day.
 - Vega and rho are expressed per one-percentage-point volatility and rate bump, respectively.
-- The finite-difference engine uses log spot, (x = \\ln(S)), and supports explicit, implicit, and Crank–Nicolson schemes.
+- The finite-difference engine uses log spot, $x = \\ln(S)$, and supports explicit, implicit, and Crank–Nicolson schemes.
 - Monte Carlo uses geometric Brownian motion with antithetic variates and a discounted-terminal-spot control variate.
 
 ## Calibration and risk
