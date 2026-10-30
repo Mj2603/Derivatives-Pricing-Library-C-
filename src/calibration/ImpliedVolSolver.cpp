@@ -3,6 +3,7 @@
 #include "dpl/core/MarketData.hpp"
 #include "dpl/greeks/GreeksCalculator.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
