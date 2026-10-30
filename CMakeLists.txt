@@ -74,6 +74,10 @@ add_executable(test_risk tests/test_risk.cpp)
 target_link_libraries(test_risk dpl GTest::gtest_main)
 add_test(NAME test_risk COMMAND test_risk)
 
+add_executable(test_input_validation tests/test_input_validation.cpp)
+target_link_libraries(test_input_validation dpl GTest::gtest_main)
+add_test(NAME test_input_validation COMMAND test_input_validation)
+
 add_executable(bench_pricing benchmarks/bench_pricing.cpp)
 target_link_libraries(bench_pricing dpl)
 
