@@ -66,3 +66,23 @@ TEST(BlackScholes, PutCallParity) {
     const double parity = call_price - put_price - S + K * std::exp(-r * T);
     EXPECT_NEAR(parity, 0.0, kTolerance);
 }
+
+
+TEST(BlackScholes, ExpiryAndZeroVolatilityLimits) {
+    dpl::AnalyticalEngine engine;
+
+    const dpl::EuropeanOption at_expiry(dpl::OptionType::Call, 100.0, 0.0);
+    const dpl::MarketData expiry_market(100.0, 0.05, 0.20);
+    const auto expiry = engine.price(at_expiry, expiry_market);
+    EXPECT_DOUBLE_EQ(expiry.price, 0.0);
+    EXPECT_DOUBLE_EQ(expiry.greeks.delta, 0.5);
+    EXPECT_DOUBLE_EQ(expiry.greeks.gamma, 0.0);
+
+    const dpl::EuropeanOption zero_vol_call(dpl::OptionType::Call, 105.0, 1.0);
+    const dpl::MarketData deterministic_market(100.0, 0.05, 0.0);
+    const auto call = engine.price(zero_vol_call, deterministic_market);
+    const double discounted_strike = 105.0 * std::exp(-0.05);
+    EXPECT_NEAR(call.price, std::max(100.0 - discounted_strike, 0.0), 1e-12);
+    EXPECT_DOUBLE_EQ(call.greeks.gamma, 0.0);
+    EXPECT_DOUBLE_EQ(call.greeks.vega, 0.0);
+}
