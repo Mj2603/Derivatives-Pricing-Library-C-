@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 namespace dpl {
@@ -14,7 +15,14 @@ MonteCarloEngine::MonteCarloEngine(int num_paths, int num_steps, unsigned seed)
     : num_paths_(num_paths),
       num_steps_(num_steps),
       seed_(seed),
-      variance_reduction_(MCVarianceReduction::None) {}
+      variance_reduction_(MCVarianceReduction::None) {
+    if (num_paths_ < 2) {
+        throw std::invalid_argument("Monte Carlo requires at least two paths");
+    }
+    if (num_steps_ < 1) {
+        throw std::invalid_argument("Monte Carlo requires at least one time step");
+    }
+}
 
 void MonteCarloEngine::set_variance_reduction(MCVarianceReduction method) {
     variance_reduction_ = method;
@@ -61,24 +69,30 @@ double arithmetic_asian_payoff(OptionType type, double average, double strike) {
 PathSample simulate_asian_path(double S0, double r, double sigma, double T, int steps,
                                int num_observations, const std::vector<double>& shocks,
                                OptionType type, double strike, double discount) {
+    if (num_observations < 1 || num_observations > steps) {
+        throw std::invalid_argument("Asian observation count must be between 1 and num_steps");
+    }
     const double dt = T / steps;
     const double drift = (r - 0.5 * sigma * sigma) * dt;
     const double vol = sigma * std::sqrt(dt);
-    const int obs_interval = std::max(steps / num_observations, 1);
 
     double S = S0;
     double sum = 0.0;
-    int obs_count = 0;
-
+    int next_observation = 1;
     for (int i = 0; i < steps; ++i) {
         S *= std::exp(drift + vol * shocks[static_cast<std::size_t>(i)]);
-        if ((i + 1) % obs_interval == 0 && obs_count < num_observations) {
+        const int observation_step =
+            (next_observation * steps + num_observations - 1) / num_observations;
+        if (i + 1 == observation_step) {
             sum += S;
-            ++obs_count;
+            ++next_observation;
         }
     }
 
-    const double average = (obs_count > 0) ? sum / obs_count : S;
+    if (next_observation != num_observations + 1) {
+        throw std::logic_error("Asian path did not reach every observation time");
+    }
+    const double average = sum / num_observations;
 
     PathSample sample;
     sample.discounted_payoff = discount * arithmetic_asian_payoff(type, average, strike);
@@ -118,7 +132,7 @@ PricingResult MonteCarloEngine::price(const Option& option,
     const auto* european = dynamic_cast<const EuropeanOption*>(&option);
     const auto* asian = dynamic_cast<const AsianOption*>(&option);
     if (!european && !asian) {
-        return {};
+        throw std::invalid_argument("Monte Carlo supports only European and Asian options");
     }
 
     const double S0 = market.spot();
@@ -132,51 +146,45 @@ PricingResult MonteCarloEngine::price(const Option& option,
     std::mt19937 rng(seed_);
     std::normal_distribution<double> normal(0.0, 1.0);
 
-    const int paths = (variance_reduction_ == MCVarianceReduction::Antithetic)
-                          ? num_paths_ / 2
-                          : num_paths_;
+    if (asian && asian->num_observations() > num_steps_) {
+        throw std::invalid_argument("Asian observation count cannot exceed num_steps");
+    }
 
     double sum_discounted = 0.0;
     std::vector<PathSample> samples;
     if (variance_reduction_ == MCVarianceReduction::ControlVariate) {
-        samples.reserve(static_cast<std::size_t>(paths));
+        samples.reserve(static_cast<std::size_t>(num_paths_));
     }
 
-    for (int i = 0; i < paths; ++i) {
-        std::vector<double> shocks(static_cast<std::size_t>(num_steps_));
-        for (int j = 0; j < num_steps_; ++j) {
-            shocks[static_cast<std::size_t>(j)] = normal(rng);
+    std::vector<double> shocks(static_cast<std::size_t>(num_steps_));
+    int generated_paths = 0;
+    while (generated_paths < num_paths_) {
+        for (double& shock : shocks) {
+            shock = normal(rng);
         }
 
-        PathSample sample;
-        if (asian) {
-            sample = simulate_asian_path(S0, r, sigma, T, num_steps_, asian->num_observations(),
-                                         shocks, type, K, discount);
-        } else {
-            sample = simulate_european_path(S0, r, sigma, T, num_steps_, shocks, type, K,
-                                            discount);
-        }
-
-        if (variance_reduction_ == MCVarianceReduction::Antithetic) {
-            for (double& z : shocks) {
-                z = -z;
-            }
-            PathSample anti;
-            if (asian) {
-                anti = simulate_asian_path(S0, r, sigma, T, num_steps_, asian->num_observations(),
-                                           shocks, type, K, discount);
-            } else {
-                anti = simulate_european_path(S0, r, sigma, T, num_steps_, shocks, type, K,
-                                              discount);
-            }
-            sample.discounted_payoff =
-                0.5 * (sample.discounted_payoff + anti.discounted_payoff);
-            sample.discounted_spot = 0.5 * (sample.discounted_spot + anti.discounted_spot);
-            sum_discounted += sample.discounted_payoff;
-        } else if (variance_reduction_ == MCVarianceReduction::ControlVariate) {
+        PathSample sample = asian
+            ? simulate_asian_path(S0, r, sigma, T, num_steps_, asian->num_observations(),
+                                  shocks, type, K, discount)
+            : simulate_european_path(S0, r, sigma, T, num_steps_, shocks, type, K, discount);
+        if (variance_reduction_ == MCVarianceReduction::ControlVariate) {
             samples.push_back(sample);
         } else {
             sum_discounted += sample.discounted_payoff;
+        }
+        ++generated_paths;
+
+        if (variance_reduction_ == MCVarianceReduction::Antithetic &&
+            generated_paths < num_paths_) {
+            for (double& shock : shocks) {
+                shock = -shock;
+            }
+            const PathSample anti = asian
+                ? simulate_asian_path(S0, r, sigma, T, num_steps_, asian->num_observations(),
+                                      shocks, type, K, discount)
+                : simulate_european_path(S0, r, sigma, T, num_steps_, shocks, type, K, discount);
+            sum_discounted += anti.discounted_payoff;
+            ++generated_paths;
         }
     }
 
@@ -185,8 +193,6 @@ PricingResult MonteCarloEngine::price(const Option& option,
     if (variance_reduction_ == MCVarianceReduction::ControlVariate) {
         // control: E[e^{-rT} S_T] = S_0
         result.price = apply_control_variate(samples, S0);
-    } else if (variance_reduction_ == MCVarianceReduction::Antithetic) {
-        result.price = sum_discounted / paths;
     } else {
         result.price = sum_discounted / num_paths_;
     }
