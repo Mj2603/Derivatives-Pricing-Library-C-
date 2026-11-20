@@ -11,8 +11,7 @@
 namespace dpl {
 namespace {
 
-PricingResult deterministic_price(OptionType type, double spot, double strike,
-                                  double discounted_strike) {
+PricingResult deterministic_price(OptionType type, double spot, double discounted_strike) {
     const double signed_intrinsic = type == OptionType::Call
         ? spot - discounted_strike
         : discounted_strike - spot;
@@ -41,8 +40,7 @@ PricingResult AnalyticalEngine::price(const Option& option,
     const double discount = market.discount_factor(maturity);
     const double volatility = market.volatility(strike);
     if (maturity == 0.0 || volatility == 0.0) {
-        return deterministic_price(
-            european->type(), spot, strike, strike * discount);
+        return deterministic_price(european->type(), spot, strike * discount);
     }
 
     const double rate = -std::log(discount) / maturity;
