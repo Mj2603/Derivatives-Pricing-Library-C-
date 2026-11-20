@@ -2,7 +2,9 @@
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <vector>
 
+#include "dpl/calibration/SABRCalibrator.hpp"
 #include "dpl/core/MarketData.hpp"
 #include "dpl/engines/AnalyticalEngine.hpp"
 #include "dpl/engines/BinomialEngine.hpp"
@@ -57,9 +59,24 @@ int main() {
     const auto t0 = std::chrono::high_resolution_clock::now();
     const dpl::PortfolioRisk risk = book.compute_risk();
     const auto t1 = std::chrono::high_resolution_clock::now();
-    const auto risk_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+    const auto risk_us = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
 
     std::cout << "book delta=" << risk.delta << " gamma=" << risk.gamma << " vega=" << risk.vega
-              << " ms=" << risk_ms << "\n";
+              << " us=" << risk_us << "\n";
+
+    // SABR: calibrate (alpha, rho, nu) with beta=0.5 to a 17-strike smile from known params.
+    const dpl::SABRParams sabr_true{2.0, 0.5, -0.3, 0.4};
+    std::vector<dpl::SABRMarketQuote> smile;
+    for (double k = 60.0; k <= 140.0; k += 5.0) {
+        smile.push_back({k, 100.0, 1.0, dpl::sabr_implied_vol(sabr_true, 100.0, k, 1.0)});
+    }
+    dpl::SABRCalibrationResult fit{};
+    const auto [sabr_rmse, sabr_us] = time_it([&] {
+        fit = dpl::calibrate_sabr(smile, 0.5);
+        return fit.rmse;
+    });
+    std::cout << "sabr calib rmse=" << sabr_rmse << " alpha_err=" << std::abs(fit.params.alpha - 2.0)
+              << " rho_err=" << std::abs(fit.params.rho + 0.3)
+              << " nu_err=" << std::abs(fit.params.nu - 0.4) << " us=" << sabr_us << "\n";
     return 0;
 }

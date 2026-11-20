@@ -1,6 +1,6 @@
 # Pricing Library Architecture
 
-The library is a C++17 research codebase for option pricing, volatility calibration experiments, and portfolio Greeks. It separates instrument definitions and market inputs from numerical pricing engines.
+The library is a C++17 research codebase for option pricing, SABR smile calibration, and portfolio Greeks. It separates instrument definitions and market inputs from numerical pricing engines.
 
 ## Pricing flow
 
@@ -40,8 +40,23 @@ The methods are not interchangeable across every product. In particular, America
 
 ## Calibration and risk
 
-The repository includes SABR calibration experiments and portfolio Greek aggregation. These are research implementations; users should inspect the model parameterization and tests before applying them to a new market or instrument set.
+### SABR
+
+`sabr_implied_vol` implements the Hagan, Kumar, Lesniewski & Woodward (2002) lognormal approximation:
+
+- z = (nu / alpha) (FK)^((1-beta)/2) ln(F/K)
+- x(z) = ln[(sqrt(1 - 2 rho z + z^2) + z - rho) / (1 - rho)], evaluated with `log1p` and a cancellation-free rearrangement for z < rho
+- sigma = alpha / {(FK)^((1-beta)/2) [1 + (1-beta)^2 ln^2(F/K) / 24 + (1-beta)^4 ln^4(F/K) / 1920]} · z / x(z) · [1 + ((1-beta)^2 alpha^2 / (24 (FK)^(1-beta)) + rho beta nu alpha / (4 (FK)^((1-beta)/2)) + (2 - 3 rho^2) nu^2 / 24) T]
+- for |z| < 1e-4, z / x(z) uses its third-order Taylor series 1 - rho z / 2 + (2 - 3 rho^2) z^2 / 12 + rho (5 - 6 rho^2) z^3 / 24, so the smile is continuous through F = K and reduces exactly to the ATM formula.
+
+`calibrate_sabr(quotes, beta, options)` fits (alpha, rho, nu) to any number (≥ 3) of quotes by minimising the mean squared implied-vol error. It uses an in-repo Nelder–Mead simplex on unconstrained variables (alpha = exp(u), rho = rho_bound · tanh(v), nu = nu_max · logistic(w)), seeded from a 5 x 4 (rho, nu) grid where alpha is solved so the quote closest to ATM is matched exactly, followed by two restarts from the best point. It returns the parameters, RMSE, iteration count and a convergence flag. Beta is supplied by the user and not fitted.
+
+Validation: `tests/test_sabr.cpp` compares against values from the independent Python reference `scripts/sabr_reference.py` and checks parameter recovery from synthetic smiles, with and without noise. Results are summarised in the README.
+
+### Risk
+
+`RiskEngine` aggregates analytical Greeks across a book of European positions.
 
 ## Validation boundaries
 
-The library requires independent convergence and reference-price checks for each product and parameter regime. It does not provide a full arbitrage-controlled volatility surface, Heston or local-volatility models, knock-in barriers, American Monte Carlo/finite-difference exercise, or production market-data controls. See the [README](../README.md) for build instructions, examples, benchmarks, and the complete limitations.
+The library requires independent convergence and reference-price checks for each product and parameter regime. It does not provide a full arbitrage-controlled volatility surface, Heston or local-volatility models, dividends, knock-in barriers, American Monte Carlo/finite-difference exercise, or production market-data controls. See the [README](../README.md) for build instructions, examples, measured benchmark results (with the machine they were measured on), and the complete limitations.
