@@ -78,8 +78,15 @@ add_executable(test_input_validation tests/test_input_validation.cpp)
 target_link_libraries(test_input_validation dpl GTest::gtest_main)
 add_test(NAME test_input_validation COMMAND test_input_validation)
 
+add_executable(test_sabr tests/test_sabr.cpp)
+target_link_libraries(test_sabr dpl GTest::gtest_main)
+add_test(NAME test_sabr COMMAND test_sabr)
+
 add_executable(bench_pricing benchmarks/bench_pricing.cpp)
 target_link_libraries(bench_pricing dpl)
 
 add_executable(price_european examples/price_european.cpp)
 target_link_libraries(price_european dpl)
+
+add_executable(sabr_smile examples/sabr_smile.cpp)
+target_link_libraries(sabr_smile dpl)

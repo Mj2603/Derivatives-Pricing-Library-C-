@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "dpl/calibration/ImpliedVolSolver.hpp"
-#include "dpl/calibration/SABRCalibrator.hpp"
 #include "dpl/core/MarketData.hpp"
 #include "dpl/engines/AnalyticalEngine.hpp"
 #include "dpl/instruments/EuropeanOption.hpp"
@@ -56,20 +55,4 @@ TEST(ImpliedVol, RoundTrip) {
                                                      market, 100.0, 1.0);
 
     EXPECT_NEAR(recovered, true_vol, 1e-4);
-}
-
-TEST(SABR, GridFit) {
-    dpl::SABRMarketQuote quote{100.0, 100.0, 1.0, 0.22};
-
-    const dpl::SABRParams initial{0.1, 0.5, 0.0, 0.3};
-    const double initial_vol = dpl::sabr_implied_vol(initial, quote.forward,
-                                                     quote.strike, quote.maturity);
-    const double initial_error = std::abs(initial_vol - quote.market_vol);
-
-    const dpl::SABRParams calibrated = dpl::calibrate_sabr(quote);
-    const double calibrated_vol = dpl::sabr_implied_vol(calibrated, quote.forward,
-                                                        quote.strike, quote.maturity);
-    const double calibrated_error = std::abs(calibrated_vol - quote.market_vol);
-
-    EXPECT_LT(calibrated_error, initial_error);
 }
